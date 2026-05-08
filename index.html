@@ -1084,10 +1084,11 @@ function findEnclosingBlock(body, node) {
   return null;
 }
 
-function makeTaskElement(text) {
+function makeTaskElement(text, opts = {}) {
   const div = document.createElement("div");
   div.className = "task";
   div.setAttribute("data-done", "false");
+  if (opts.fresh) div.setAttribute("data-fresh", "true");
   const cb = document.createElement("input");
   cb.type = "checkbox";
   cb.contentEditable = "false";
@@ -1127,7 +1128,7 @@ function toggleTaskAtCursor() {
     // create a task with the current body's text content
     const text = body.textContent;
     body.innerHTML = "";
-    const task = makeTaskElement(text);
+    const task = makeTaskElement(text, { fresh: text.trim().length === 0 });
     body.appendChild(task);
     placeCaretAtEnd(task.querySelector(".task-text"));
     syncEmptyState(body);
@@ -1192,7 +1193,8 @@ function focusEditableAtPoint(body, x, y) {
 }
 
 function onBodyKeyDown(e) {
-  // Enter inside a task → create a new task; if current task is empty, exit list
+  // Enter inside a task creates the next row. Press Enter again on an empty row
+  // to exit the checklist, matching the behavior people expect from list editors.
   if (e.key === "Enter" && !e.shiftKey) {
     const body = e.currentTarget;
     const sel = window.getSelection();
@@ -1204,12 +1206,20 @@ function onBodyKeyDown(e) {
       const span = block.querySelector(".task-text");
       const isEmpty = !span || span.textContent.length === 0;
       if (isEmpty) {
-        // exit the list: replace task with empty div, place caret there
-        const div = document.createElement("div");
-        div.appendChild(document.createElement("br"));
-        block.parentNode.replaceChild(div, block);
-        placeCaretAtStart(div);
+        if (block.dataset.fresh === "true") {
+          block.removeAttribute("data-fresh");
+          const newTask = makeTaskElement("");
+          block.parentNode.insertBefore(newTask, block.nextSibling);
+          placeCaretAtStart(newTask.querySelector(".task-text"));
+        } else {
+          // exit the list: replace task with empty div, place caret there
+          const div = document.createElement("div");
+          div.appendChild(document.createElement("br"));
+          block.parentNode.replaceChild(div, block);
+          placeCaretAtStart(div);
+        }
       } else {
+        block.removeAttribute("data-fresh");
         if (span && !span.contains(range.startContainer)) {
           range.selectNodeContents(span);
           range.collapse(false);
