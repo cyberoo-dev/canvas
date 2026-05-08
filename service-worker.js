@@ -1,6 +1,6 @@
 /* Canvas service worker — minimal offline-first cache for the app shell and fonts. */
 
-const VERSION = "canvas-v1";
+const VERSION = "canvas-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
