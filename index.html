@@ -548,6 +548,24 @@
     border-color: rgba(42,38,32,0.36);
     box-shadow: 0 0 0 3px rgba(42,38,32,0.08);
   }
+  .color-tone-row {
+    display: grid;
+    gap: 6px;
+    padding: 1px 2px 0;
+  }
+  .color-tone-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--ink-soft);
+    font: 600 11px "Hanken Grotesk", sans-serif;
+  }
+  #brightness-input {
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    accent-color: var(--active-custom-color, #FFE08A);
+    cursor: pointer;
+  }
 
   .tb-divider {
     width: 1px;
@@ -710,12 +728,12 @@
     .tb-btn svg { width: 20px; height: 20px; }
 
     .swatches {
-      gap: 8px;
-      padding: 4px;
+      gap: 10px;
+      padding: 4px 2px;
     }
     .swatch {
-      width: 30px;
-      height: 30px;
+      width: 42px;
+      height: 42px;
     }
     .custom-color-wrap { flex: 0 0 auto; }
     .color-picker-btn .color-dot {
@@ -723,11 +741,24 @@
       height: 26px;
     }
     .color-popover {
-      left: 0;
-      transform: translateY(6px);
+      position: fixed;
+      left: max(10px, env(safe-area-inset-left, 0px) + 10px);
+      right: max(10px, env(safe-area-inset-right, 0px) + 10px);
+      bottom: max(72px, env(safe-area-inset-bottom, 0px) + 70px);
+      transform: translateY(10px);
+      width: auto;
+      padding: 14px;
+      gap: 12px;
+      border-radius: 22px;
     }
     .color-popover.visible { transform: translateY(0); }
     .hex-input { display: none; }
+    .color-custom-row { gap: 10px; }
+    .color-field {
+      width: 100%;
+      height: 46px;
+    }
+    #brightness-input { height: 34px; }
 
     .tb-divider { flex: 0 0 1px; }
     .zoom-display {
@@ -824,6 +855,10 @@
         <button class="color-field" id="btn-open-color-wheel" aria-label="Colour wheel"></button>
         <input class="hex-input" id="hex-color-input" value="#FFE08A" maxlength="7" inputmode="text" aria-label="Hex colour" />
       </div>
+      <div class="color-tone-row">
+        <div class="color-tone-meta"><span>Brightness</span><span id="brightness-value">100%</span></div>
+        <input id="brightness-input" type="range" min="40" max="100" value="100" aria-label="Brightness" />
+      </div>
     </div>
   </div>
 
@@ -911,8 +946,11 @@ const $zoomDisplay = document.getElementById("zoom-display");
 const $formatBar = document.getElementById("format-bar");
 const $customColorInput = document.getElementById("custom-color-input");
 const $hexColorInput = document.getElementById("hex-color-input");
+const $brightnessInput = document.getElementById("brightness-input");
+const $brightnessValue = document.getElementById("brightness-value");
 const $colorPopover = document.getElementById("color-popover");
 const $customColorButtons = document.querySelectorAll(".color-picker-btn");
+let brightnessBaseColor = COLOR_VALUES.sun;
 
 /* ---------------- Utilities ---------------- */
 const uid = () => "n" + (state.nextId++);
@@ -930,6 +968,27 @@ function normalizeHex(value) {
   }
   if (/^[0-9a-f]{6}$/i.test(raw)) return "#" + raw.toUpperCase();
   return null;
+}
+
+function hexToRgb(hex) {
+  const clean = normalizeHex(hex);
+  if (!clean) return null;
+  return {
+    r: parseInt(clean.slice(1, 3), 16),
+    g: parseInt(clean.slice(3, 5), 16),
+    b: parseInt(clean.slice(5, 7), 16),
+  };
+}
+
+function rgbToHex({ r, g, b }) {
+  return "#" + [r, g, b].map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+
+function shadeHex(hex, percent) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return colorValue(state.activeColor);
+  const amount = clamp(Number(percent) || 100, 40, 100) / 100;
+  return rgbToHex({ r: rgb.r * amount, g: rgb.g * amount, b: rgb.b * amount });
 }
 
 function fontSizeName(px) {
@@ -2158,6 +2217,8 @@ function buildSwatches() {
     sw.title = c;
     if (c === state.activeColor) sw.classList.add("active");
     sw.addEventListener("click", () => {
+      brightnessBaseColor = COLOR_VALUES[c];
+      $brightnessInput.value = "100";
       applyActiveColor(c);
       hideColorPopover();
     });
@@ -2173,10 +2234,12 @@ function refreshColorControls() {
   document.documentElement.style.setProperty("--active-custom-color", value);
   $customColorInput.value = value;
   $hexColorInput.value = value.toUpperCase();
+  $brightnessValue.textContent = $brightnessInput.value + "%";
   document.getElementById("btn-custom-color").classList.toggle("active", isCustomColor(state.activeColor));
 }
 
-function applyActiveColor(color) {
+function applyActiveColor(color, opts = {}) {
+  const commit = opts.commit !== false;
   state.activeColor = color;
   if (state.selection.size > 0) {
     for (const id of state.selection) {
@@ -2184,7 +2247,8 @@ function applyActiveColor(color) {
       if (n) n.color = color;
     }
     fullRender();
-    pushHistory();
+    if (commit) pushHistory();
+    else scheduleSave();
   } else {
     refreshColorControls();
     scheduleSave();
@@ -2192,6 +2256,8 @@ function applyActiveColor(color) {
 }
 
 function showColorPopover() {
+  brightnessBaseColor = colorValue(state.activeColor);
+  $brightnessInput.value = "100";
   refreshColorControls();
   $colorPopover.classList.add("visible");
 }
@@ -2202,8 +2268,8 @@ function hideColorPopover() {
 
 document.getElementById("btn-custom-color").addEventListener("click", (e) => {
   e.stopPropagation();
-  $colorPopover.classList.toggle("visible");
-  refreshColorControls();
+  if ($colorPopover.classList.contains("visible")) hideColorPopover();
+  else showColorPopover();
 });
 
 document.getElementById("btn-open-color-wheel").addEventListener("click", (e) => {
@@ -2212,15 +2278,33 @@ document.getElementById("btn-open-color-wheel").addEventListener("click", (e) =>
 });
 
 $customColorInput.addEventListener("input", () => {
-  applyActiveColor($customColorInput.value.toUpperCase());
+  brightnessBaseColor = $customColorInput.value.toUpperCase();
+  $brightnessInput.value = "100";
+  applyActiveColor(brightnessBaseColor);
   showColorPopover();
 });
 
 $hexColorInput.addEventListener("input", () => {
   const hex = normalizeHex($hexColorInput.value);
   if (!hex) return;
+  brightnessBaseColor = hex;
+  $brightnessInput.value = "100";
   applyActiveColor(hex);
 });
+
+function prepareBrightnessBase() {
+  brightnessBaseColor = colorValue(state.activeColor);
+}
+
+$brightnessInput.addEventListener("pointerdown", prepareBrightnessBase);
+$brightnessInput.addEventListener("focus", prepareBrightnessBase);
+$brightnessInput.addEventListener("input", () => {
+  const next = shadeHex(brightnessBaseColor, $brightnessInput.value);
+  applyActiveColor(next, { commit: false });
+  refreshColorControls();
+  $colorPopover.classList.add("visible");
+});
+$brightnessInput.addEventListener("change", () => pushHistory());
 
 $colorPopover.addEventListener("pointerdown", (e) => e.stopPropagation());
 $customColorButtons.forEach(btn => btn.addEventListener("pointerdown", (e) => e.stopPropagation()));
