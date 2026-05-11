@@ -1,6 +1,6 @@
 /* Canvas service worker — minimal offline-first cache for the app shell and fonts. */
 
-const VERSION = "canvas-v2";
+const VERSION = "canvas-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -20,11 +20,18 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))
-    )
+    caches.keys().then((keys) => {
+      const hadPreviousVersion = keys.some((k) => k.startsWith("canvas-") && k !== VERSION);
+      return Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))
+        .then(() => self.clients.claim())
+        .then(() => {
+          if (!hadPreviousVersion) return;
+          return self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+            for (const client of clients) client.postMessage({ type: "CANVAS_UPDATED", version: VERSION });
+          });
+        });
+    })
   );
-  self.clients.claim();
 });
 
 /* Strategy:

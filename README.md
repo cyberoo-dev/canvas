@@ -5,8 +5,8 @@ Canvas is a small offline-first sticky note board for thinking visually. It runs
 ## Features
 
 - Infinite canvas with pan and zoom
-- Sticky notes with color swatches
-- Checklist, bold, and italic formatting inside notes
+- Sticky notes with quick swatches and custom colours
+- Checklist, bullet list, simple text sizing, bold, and italic formatting inside notes
 - Multi-select, grouping, duplication, deletion, and fit-to-content
 - Local JSON export and import
 - Installable PWA with offline caching
@@ -42,7 +42,8 @@ Then visit <http://localhost:8080>.
 - Pan by dragging empty canvas space.
 - Zoom with the toolbar controls or mouse wheel.
 - Select notes, then use the toolbar to group, ungroup, recolor, or delete them.
-- While editing a note, select text to use bold, italic, or checklist formatting.
+- Use the swatches for quick colours, or the colour-wheel control for a custom colour. Desktop users can type a hex value.
+- While editing a note, select text to use bold, italic, text size, bullet list, or checklist formatting.
 - Export with `Cmd/Ctrl + E`; import with `Cmd/Ctrl + O`.
 
 ## Mobile Notes
@@ -64,7 +65,7 @@ Common options:
 - Cloudflare Pages
 - Vercel
 
-After deploying an update, bump the `VERSION` value in `service-worker.js` so existing installations refresh their cached app shell.
+After deploying an update, bump the `VERSION` value in `service-worker.js`. Existing installed PWAs will update their cached app shell and show a small reload prompt when the new service worker activates.
 
 ## Development
 

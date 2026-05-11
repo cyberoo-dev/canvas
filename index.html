@@ -96,10 +96,10 @@
     min-height: 200px;
     padding: 22px 22px 28px;
     border-radius: 4px;
-    background: var(--note-sun);
+    background: var(--note-bg, var(--note-sun));
     box-shadow: var(--shadow-note);
     font-family: "Caveat", "Hanken Grotesk", sans-serif;
-    font-size: 22px;
+    font-size: var(--note-font-size, 22px);
     line-height: 1.32;
     color: #2A2620;
     cursor: grab;
@@ -144,6 +144,12 @@
   }
   .note .body strong { font-weight: 700; }
   .note .body em { font-style: italic; }
+  .note .body ul,
+  .note .body ol {
+    margin: 0.08em 0 0.08em 1.05em;
+    padding-left: 0.2em;
+  }
+  .note .body li { padding-left: 0.04em; }
 
   /* checklist items inside a note */
   .note .body .task {
@@ -269,6 +275,8 @@
   #format-bar .fb-btn b { font-weight: 700; font-family: "Fraunces", serif; }
   #format-bar .fb-btn i { font-style: italic; font-family: "Fraunces", serif; }
   #format-bar .fb-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  #format-bar .fb-btn[data-size="small"] svg { width: 14px; height: 14px; }
+  #format-bar .fb-btn[data-size="large"] svg { width: 18px; height: 18px; }
   #format-bar .fb-divider {
     width: 1px;
     height: 18px;
@@ -417,13 +425,14 @@
   .tb-btn.primary:hover { background: #1a1714; }
 
   .swatches {
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
     align-items: center;
-    gap: 6px;
-    padding: 0 8px;
+    gap: 8px;
+    padding: 4px;
   }
   .swatch {
-    width: 22px; height: 22px;
+    width: 28px; height: 28px;
     border-radius: 50%;
     border: 1.5px solid rgba(0,0,0,0.08);
     cursor: pointer;
@@ -434,6 +443,110 @@
   .swatch.active {
     transform: scale(1.18);
     box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent);
+  }
+
+  .custom-color-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+  }
+  .color-picker-btn {
+    min-width: 42px;
+    width: 42px;
+    padding: 0;
+  }
+  .color-picker-btn .color-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,251,243,0.92);
+    background: var(--active-custom-color, #FFE08A);
+    box-shadow: 0 0 0 1px rgba(42,38,32,0.12), 0 2px 5px rgba(42,38,32,0.14);
+  }
+  .color-picker-btn.active {
+    background: rgba(42, 38, 32, 0.08);
+  }
+  #custom-color-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .color-popover {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 12px);
+    transform: translateX(-50%) translateY(6px);
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    padding: 9px;
+    border-radius: 18px;
+    background: rgba(255,251,243,0.9);
+    border: 1px solid rgba(42,38,32,0.08);
+    box-shadow: 0 18px 44px rgba(40,30,10,0.16), 0 4px 14px rgba(40,30,10,0.08), inset 0 1px 0 rgba(255,255,255,0.82);
+    backdrop-filter: saturate(170%) blur(22px);
+    -webkit-backdrop-filter: saturate(170%) blur(22px);
+    opacity: 0;
+    transition: opacity 140ms ease, transform 140ms ease;
+  }
+  .color-popover.visible {
+    display: inline-flex;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .color-popover::after {
+    display: none;
+  }
+  .color-custom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .color-field {
+    width: 84px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    outline: none;
+    display: block;
+    font: inherit;
+    line-height: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background:
+      radial-gradient(circle at 17px 50%, var(--active-custom-color, #FFE08A) 0 9px, rgba(255,251,243,0.94) 9.5px 12px, transparent 12.5px),
+      linear-gradient(90deg, rgba(255,255,255,0.48), rgba(255,255,255,0)),
+      linear-gradient(120deg, #ff6b7a, #ffd166 28%, #7bd88f 50%, #56c7ff 72%, #a78bfa);
+    box-shadow: inset 0 0 0 1px rgba(42,38,32,0.09), inset 0 1px 0 rgba(255,255,255,0.45), 0 1px 2px rgba(42,38,32,0.08);
+    transition: transform 120ms ease, box-shadow 140ms ease;
+  }
+  .color-field:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 0 0 1px rgba(42,38,32,0.13), inset 0 1px 0 rgba(255,255,255,0.48), 0 4px 10px rgba(42,38,32,0.12);
+  }
+  .color-field:focus-visible {
+    box-shadow: inset 0 0 0 1px rgba(42,38,32,0.16), 0 0 0 3px rgba(42,38,32,0.08);
+  }
+  .hex-input {
+    width: 86px;
+    height: 34px;
+    border: 1px solid rgba(42,38,32,0.16);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.72);
+    color: var(--ink);
+    font: 600 13px "Hanken Grotesk", sans-serif;
+    text-transform: uppercase;
+    padding: 0 9px;
+    outline: none;
+  }
+  .hex-input:focus {
+    border-color: rgba(42,38,32,0.36);
+    box-shadow: 0 0 0 3px rgba(42,38,32,0.08);
   }
 
   .tb-divider {
@@ -534,6 +647,34 @@
 
   .no-transition { transition: none !important; }
 
+  .update-toast {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right, 0px) + 16px);
+    bottom: max(88px, env(safe-area-inset-bottom, 0px) + 74px);
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 8px 8px 12px;
+    border-radius: 16px;
+    background: rgba(42,38,32,0.94);
+    color: #FFFBF3;
+    box-shadow: 0 12px 34px rgba(0,0,0,0.18), 0 3px 10px rgba(0,0,0,0.12);
+    z-index: 10000;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .update-toast.visible { display: inline-flex; }
+  .update-toast button {
+    height: 30px;
+    border: none;
+    border-radius: 10px;
+    padding: 0 10px;
+    background: #FFFBF3;
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+  }
+
   @media (max-width: 700px) {
     .note {
       width: 220px;
@@ -570,14 +711,23 @@
 
     .swatches {
       gap: 8px;
-      padding: 0 6px;
-      flex: 0 0 auto;
+      padding: 4px;
     }
     .swatch {
       width: 30px;
       height: 30px;
-      flex: 0 0 auto;
     }
+    .custom-color-wrap { flex: 0 0 auto; }
+    .color-picker-btn .color-dot {
+      width: 26px;
+      height: 26px;
+    }
+    .color-popover {
+      left: 0;
+      transform: translateY(6px);
+    }
+    .color-popover.visible { transform: translateY(0); }
+    .hex-input { display: none; }
 
     .tb-divider { flex: 0 0 1px; }
     .zoom-display {
@@ -607,6 +757,12 @@
     #empty-hint .keys {
       display: none;
     }
+    .update-toast {
+      left: max(10px, env(safe-area-inset-left, 0px) + 10px);
+      right: max(10px, env(safe-area-inset-right, 0px) + 10px);
+      bottom: max(78px, env(safe-area-inset-bottom, 0px) + 76px);
+      justify-content: space-between;
+    }
   }
 </style>
 </head>
@@ -633,6 +789,19 @@
   <button class="fb-btn" data-action="bold" data-tip="Bold (⌘B)"><b>B</b></button>
   <button class="fb-btn" data-action="italic" data-tip="Italic (⌘I)"><i>I</i></button>
   <div class="fb-divider"></div>
+  <button class="fb-btn" data-action="size-small" data-size="small" data-tip="Small text">
+    <svg viewBox="0 0 24 24"><path d="M5 19l5-14 5 14M7 14h6"/></svg>
+  </button>
+  <button class="fb-btn" data-action="size-normal" data-size="normal" data-tip="Normal text">
+    <svg viewBox="0 0 24 24"><path d="M4 19L11 5l7 14M7 14h8"/></svg>
+  </button>
+  <button class="fb-btn" data-action="size-large" data-size="large" data-tip="Large text">
+    <svg viewBox="0 0 24 24"><path d="M3 20L12 4l9 16M7 14h10"/></svg>
+  </button>
+  <div class="fb-divider"></div>
+  <button class="fb-btn" data-action="list" data-tip="Bullet list">
+    <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>
+  </button>
   <button class="fb-btn" data-action="task" data-tip="Checklist">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12l3 3 5-6"/></svg>
   </button>
@@ -644,7 +813,19 @@
     <span>Note</span>
   </button>
 
-  <div class="swatches" id="swatches"></div>
+  <div class="custom-color-wrap">
+    <button class="tb-btn color-picker-btn" id="btn-custom-color" data-tip="Custom colour">
+      <span class="color-dot" aria-hidden="true"></span>
+    </button>
+    <input id="custom-color-input" type="color" value="#FFE08A" aria-label="Custom colour" />
+    <div class="color-popover" id="color-popover">
+      <div class="swatches" id="swatches"></div>
+      <div class="color-custom-row">
+        <button class="color-field" id="btn-open-color-wheel" aria-label="Colour wheel"></button>
+        <input class="hex-input" id="hex-color-input" value="#FFE08A" maxlength="7" inputmode="text" aria-label="Hex colour" />
+      </div>
+    </div>
+  </div>
 
   <div class="tb-divider"></div>
 
@@ -672,11 +853,28 @@
   </button>
 </div>
 
+<div class="update-toast" id="update-toast" role="status" aria-live="polite">
+  <span>Update ready</span>
+  <button id="btn-update-reload" type="button">Reload</button>
+</div>
+
 <script>
 "use strict";
 
 /* ---------------- Constants ---------------- */
 const COLORS = ["sun", "rose", "sky", "sage", "lilac"];
+const COLOR_VALUES = {
+  sun: "#FFE08A",
+  rose: "#FFC2CC",
+  sky: "#B5DAFF",
+  sage: "#C8E8B8",
+  lilac: "#DCC8F5",
+};
+const FONT_SIZES = {
+  small: 18,
+  normal: 22,
+  large: 28,
+};
 const ZOOM_MIN = 0.18;
 const ZOOM_MAX = 3.5;
 const NOTE_DEFAULT_W = 200;
@@ -695,7 +893,7 @@ const HISTORY_MAX = 60;
 const state = {
   pan: { x: 0, y: 0 },
   zoom: 1,
-  notes: new Map(),       // id -> { id, x, y, w, h, color, html, rotation, groupId }
+  notes: new Map(),       // id -> { id, x, y, w, h, color, fontSize, html, rotation, groupId }
   groups: new Map(),      // id -> { id, label, color }
   selection: new Set(),
   selectedGroup: null,
@@ -711,10 +909,50 @@ const $selBox = document.getElementById("selection-box");
 const $emptyHint = document.getElementById("empty-hint");
 const $zoomDisplay = document.getElementById("zoom-display");
 const $formatBar = document.getElementById("format-bar");
+const $customColorInput = document.getElementById("custom-color-input");
+const $hexColorInput = document.getElementById("hex-color-input");
+const $colorPopover = document.getElementById("color-popover");
+const $customColorButtons = document.querySelectorAll(".color-picker-btn");
 
 /* ---------------- Utilities ---------------- */
 const uid = () => "n" + (state.nextId++);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const isCustomColor = (color) => /^#[0-9a-f]{6}$/i.test(color || "");
+
+function colorValue(color) {
+  return isCustomColor(color) ? color : (COLOR_VALUES[color] || COLOR_VALUES.sun);
+}
+
+function normalizeHex(value) {
+  const raw = (value || "").trim().replace(/^#/, "");
+  if (/^[0-9a-f]{3}$/i.test(raw)) {
+    return "#" + raw.split("").map(ch => ch + ch).join("").toUpperCase();
+  }
+  if (/^[0-9a-f]{6}$/i.test(raw)) return "#" + raw.toUpperCase();
+  return null;
+}
+
+function fontSizeName(px) {
+  const size = Number(px) || FONT_SIZES.normal;
+  if (size <= FONT_SIZES.small) return "small";
+  if (size >= FONT_SIZES.large) return "large";
+  return "normal";
+}
+
+function selectionFontSizeName(body) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || !body) return "normal";
+  let node = sel.focusNode;
+  if (node && node.nodeType === 3) node = node.parentNode;
+  while (node && node !== body) {
+    if (node.nodeType === 1) {
+      const size = parseFloat(node.style?.fontSize || "");
+      if (size) return fontSizeName(size);
+    }
+    node = node.parentNode;
+  }
+  return "normal";
+}
 
 function screenToWorld(sx, sy) {
   return { x: (sx - state.pan.x) / state.zoom, y: (sy - state.pan.y) / state.zoom };
@@ -787,6 +1025,7 @@ function loadFromStorage() {
 /* ---------------- History (undo/redo) ---------------- */
 
 const history = { stack: [], idx: -1 };
+let isApplyingHistory = false;
 
 function snapshot() {
   return {
@@ -804,7 +1043,9 @@ function loadSnapshot(snap) {
   state.selection = new Set(snap.selection);
   state.selectedGroup = snap.selectedGroup;
   state.nextId = snap.nextId;
+  isApplyingHistory = true;
   fullRender();
+  isApplyingHistory = false;
   scheduleSave();
 }
 
@@ -840,6 +1081,46 @@ function scheduleTextHistory() {
   textHistoryTimer = setTimeout(() => { pushHistory(); }, 700);
 }
 
+function snapshotEquals(a, b) {
+  if (!a || !b) return false;
+  return JSON.stringify(a.notes) === JSON.stringify(b.notes)
+    && JSON.stringify(a.groups) === JSON.stringify(b.groups)
+    && a.selectedGroup === b.selectedGroup
+    && a.nextId === b.nextId;
+}
+
+function syncActiveEditorToState() {
+  const active = document.activeElement;
+  if (!active) return false;
+
+  if (active.classList?.contains("body")) {
+    const note = state.notes.get(active.parentNode.id);
+    if (!note) return false;
+    const changed = note.html !== active.innerHTML;
+    note.html = active.innerHTML;
+    syncEmptyState(active);
+    return changed;
+  }
+
+  if (active.classList?.contains("group-label")) {
+    const group = state.groups.get(active.parentNode.id);
+    if (!group) return false;
+    const changed = group.label !== active.textContent;
+    group.label = active.textContent;
+    return changed;
+  }
+
+  return false;
+}
+
+function pushCurrentEditBeforeHistoryMove() {
+  clearTimeout(textHistoryTimer);
+  syncActiveEditorToState();
+  const snap = snapshot();
+  const current = history.stack[history.idx];
+  if (!snapshotEquals(snap, current)) pushHistory();
+}
+
 /* ---------------- DOM rendering ---------------- */
 
 function renderNote(note) {
@@ -848,7 +1129,7 @@ function renderNote(note) {
   if (isNew) {
     el = document.createElement("div");
     el.id = note.id;
-    el.className = "note color-" + note.color;
+    el.className = "note";
     el.style.setProperty("--rot", note.rotation + "deg");
 
     const body = document.createElement("div");
@@ -907,9 +1188,10 @@ function renderNote(note) {
       delete note._spawn;
     }
   } else {
-    // sync html only if it differs (avoid clobbering caret while typing)
+    // Avoid clobbering the caret while typing, except when history is applying
+    // an older/newer snapshot and the visible editor must update immediately.
     const body = el.querySelector(".body");
-    if (body && document.activeElement !== body && body.innerHTML !== (note.html || "")) {
+    if (body && (isApplyingHistory || document.activeElement !== body) && body.innerHTML !== (note.html || "")) {
       body.innerHTML = note.html || "";
       syncEmptyState(body);
     }
@@ -920,10 +1202,12 @@ function renderNote(note) {
   el.style.width = note.w + "px";
   el.style.minHeight = note.h + "px";
   el.style.transform = `rotate(${note.rotation}deg)`;
+  el.style.setProperty("--note-bg", colorValue(note.color));
+  el.style.setProperty("--note-font-size", (note.fontSize || FONT_SIZES.normal) + "px");
   el.classList.toggle("selected", state.selection.has(note.id));
 
   for (const c of COLORS) el.classList.remove("color-" + c);
-  el.classList.add("color-" + note.color);
+  if (!isCustomColor(note.color)) el.classList.add("color-" + (note.color || "sun"));
 }
 
 function syncEmptyState(body) {
@@ -1010,6 +1294,7 @@ function fullRender() {
   document.getElementById("btn-ungroup").disabled = !canUngroup();
   document.getElementById("btn-delete").disabled = state.selection.size === 0 && !state.selectedGroup;
 
+  refreshColorControls();
   positionFormatBar();
 }
 
@@ -1053,8 +1338,19 @@ $formatBar.addEventListener("click", (e) => {
   const btn = e.target.closest(".fb-btn");
   if (!btn) return;
   const action = btn.dataset.action;
-  if (action === "bold") document.execCommand("bold");
-  else if (action === "italic") document.execCommand("italic");
+  if (action === "bold") {
+    document.execCommand("bold");
+    syncFormatTargetNote();
+  }
+  else if (action === "italic") {
+    document.execCommand("italic");
+    syncFormatTargetNote();
+  }
+  else if (action === "list") {
+    document.execCommand("insertUnorderedList");
+    syncFormatTargetNote();
+  }
+  else if (action.startsWith("size-")) setNoteTextSize(action.replace("size-", ""));
   else if (action === "task") toggleTaskAtCursor();
   // refresh active states
   updateFormatBarActive();
@@ -1066,11 +1362,46 @@ function updateFormatBarActive() {
   const italicOn = document.queryCommandState("italic");
   $formatBar.querySelector('[data-action="bold"]').classList.toggle("active", boldOn);
   $formatBar.querySelector('[data-action="italic"]').classList.toggle("active", italicOn);
+  $formatBar.querySelector('[data-action="list"]').classList.toggle("active", document.queryCommandState("insertUnorderedList"));
+  const currentSize = selectionFontSizeName(formatBarTarget.querySelector(".body"));
+  $formatBar.querySelectorAll("[data-size]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.size === currentSize);
+  });
 }
 
 document.addEventListener("selectionchange", () => {
   if (formatBarTarget) updateFormatBarActive();
 });
+
+function syncFormatTargetNote() {
+  if (!formatBarTarget) return;
+  const body = formatBarTarget.querySelector(".body");
+  const note = state.notes.get(formatBarTarget.id);
+  if (!body || !note) return;
+  note.html = body.innerHTML;
+  syncEmptyState(body);
+  scheduleTextHistory();
+  scheduleSave();
+}
+
+function setNoteTextSize(sizeName) {
+  if (!formatBarTarget || !FONT_SIZES[sizeName]) return;
+  const body = formatBarTarget.querySelector(".body");
+  const sel = window.getSelection();
+  if (!body || !sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  if (range.collapsed || !body.contains(range.commonAncestorContainer)) return;
+
+  document.execCommand("fontSize", false, "7");
+  body.querySelectorAll('font[size="7"]').forEach(font => {
+    const span = document.createElement("span");
+    span.style.fontSize = FONT_SIZES[sizeName] + "px";
+    while (font.firstChild) span.appendChild(font.firstChild);
+    font.replaceWith(span);
+  });
+  syncFormatTargetNote();
+  pushHistory();
+}
 
 /* ---------------- Task (checklist) helpers ---------------- */
 
@@ -1311,6 +1642,7 @@ function createNote(worldX, worldY, opts = {}) {
     w: opts.w || NOTE_DEFAULT_W,
     h: opts.h || NOTE_DEFAULT_H,
     color: opts.color || state.activeColor,
+    fontSize: opts.fontSize || FONT_SIZES.normal,
     html: opts.html || "",
     rotation,
     groupId: opts.groupId || null,
@@ -1826,22 +2158,76 @@ function buildSwatches() {
     sw.title = c;
     if (c === state.activeColor) sw.classList.add("active");
     sw.addEventListener("click", () => {
-      state.activeColor = c;
-      [...root.children].forEach(el => el.classList.toggle("active", el.dataset.color === c));
-      if (state.selection.size > 0) {
-        for (const id of state.selection) {
-          const n = state.notes.get(id);
-          if (n) n.color = c;
-        }
-        fullRender();
-        pushHistory();
-      }
-      scheduleSave();
+      applyActiveColor(c);
+      hideColorPopover();
     });
     root.appendChild(sw);
   }
 }
 buildSwatches();
+
+function refreshColorControls() {
+  const swatchRoot = document.getElementById("swatches");
+  [...swatchRoot.children].forEach(el => el.classList.toggle("active", el.dataset.color === state.activeColor));
+  const value = colorValue(state.activeColor);
+  document.documentElement.style.setProperty("--active-custom-color", value);
+  $customColorInput.value = value;
+  $hexColorInput.value = value.toUpperCase();
+  document.getElementById("btn-custom-color").classList.toggle("active", isCustomColor(state.activeColor));
+}
+
+function applyActiveColor(color) {
+  state.activeColor = color;
+  if (state.selection.size > 0) {
+    for (const id of state.selection) {
+      const n = state.notes.get(id);
+      if (n) n.color = color;
+    }
+    fullRender();
+    pushHistory();
+  } else {
+    refreshColorControls();
+    scheduleSave();
+  }
+}
+
+function showColorPopover() {
+  refreshColorControls();
+  $colorPopover.classList.add("visible");
+}
+
+function hideColorPopover() {
+  $colorPopover.classList.remove("visible");
+}
+
+document.getElementById("btn-custom-color").addEventListener("click", (e) => {
+  e.stopPropagation();
+  $colorPopover.classList.toggle("visible");
+  refreshColorControls();
+});
+
+document.getElementById("btn-open-color-wheel").addEventListener("click", (e) => {
+  e.stopPropagation();
+  $customColorInput.click();
+});
+
+$customColorInput.addEventListener("input", () => {
+  applyActiveColor($customColorInput.value.toUpperCase());
+  showColorPopover();
+});
+
+$hexColorInput.addEventListener("input", () => {
+  const hex = normalizeHex($hexColorInput.value);
+  if (!hex) return;
+  applyActiveColor(hex);
+});
+
+$colorPopover.addEventListener("pointerdown", (e) => e.stopPropagation());
+$customColorButtons.forEach(btn => btn.addEventListener("pointerdown", (e) => e.stopPropagation()));
+document.addEventListener("pointerdown", (e) => {
+  if (!e.target.closest(".custom-color-wrap")) hideColorPopover();
+});
+refreshColorControls();
 
 document.getElementById("btn-add").addEventListener("click", () => {
   const cx = window.innerWidth / 2;
@@ -1905,7 +2291,9 @@ function fitToContent() {
 let arrowNudgeTimer = null;
 
 window.addEventListener("keydown", (e) => {
-  const editing = document.activeElement && (document.activeElement.isContentEditable || document.activeElement.tagName === "INPUT");
+  const active = document.activeElement;
+  const editingText = active && active.isContentEditable;
+  const editing = active && (active.isContentEditable || active.tagName === "INPUT");
   const meta = e.metaKey || e.ctrlKey;
 
   // formatting shortcuts (work while editing)
@@ -1914,15 +2302,19 @@ window.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() === "i") { /* let browser do it */ return; }
   }
 
-  // undo/redo: when editing, let browser handle text undo
   if (meta && e.key.toLowerCase() === "z") {
-    if (editing) return;
+    if (active?.tagName === "INPUT") return;
     e.preventDefault();
+    if (editingText) pushCurrentEditBeforeHistoryMove();
     if (e.shiftKey) redo(); else undo();
     return;
   }
-  if (meta && e.key.toLowerCase() === "y" && !editing) {
-    e.preventDefault(); redo(); return;
+  if (meta && e.key.toLowerCase() === "y") {
+    if (active?.tagName === "INPUT") return;
+    e.preventDefault();
+    if (editingText) pushCurrentEditBeforeHistoryMove();
+    redo();
+    return;
   }
 
   if (editing) {
@@ -2060,7 +2452,24 @@ window.addEventListener("keydown", (e) => {
 // Caches the app shell so it loads instantly and works offline once installed.
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(err => {
+    const toast = document.getElementById("update-toast");
+    const reloadBtn = document.getElementById("btn-update-reload");
+    const showUpdateToast = () => toast.classList.add("visible");
+    reloadBtn.addEventListener("click", () => window.location.reload());
+
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data?.type === "CANVAS_UPDATED") showUpdateToast();
+    });
+
+    navigator.serviceWorker.register("./service-worker.js").then((registration) => {
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        if (!worker) return;
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "activated" && navigator.serviceWorker.controller) showUpdateToast();
+        });
+      });
+    }).catch(err => {
       console.warn("Service worker registration failed:", err);
     });
   });
